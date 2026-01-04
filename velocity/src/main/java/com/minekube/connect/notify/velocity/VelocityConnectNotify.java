@@ -16,6 +16,9 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
 /**
  * Velocity implementation of Connect Notify.
@@ -36,7 +39,7 @@ public class VelocityConnectNotify implements ConnectNotifyPlatform {
     private final ProxyServer proxy;
     private final Logger slf4jLogger;
     private final Path dataDirectory;
-    private final java.util.logging.Logger logger;
+    private final java.util.logging.Logger julLogger;
 
     private ConnectNotify connectNotify;
 
@@ -45,11 +48,9 @@ public class VelocityConnectNotify implements ConnectNotifyPlatform {
         this.proxy = proxy;
         this.slf4jLogger = logger;
         this.dataDirectory = dataDirectory;
-        this.logger = java.util.logging.Logger.getLogger("ConnectNotify");
-
-        // Bridge SLF4J to java.util.logging
-        this.logger.setUseParentHandlers(false);
-        this.logger.addHandler(new Slf4jBridgeHandler(logger));
+        
+        // Create a custom JUL logger that bridges to SLF4J
+        this.julLogger = new Slf4jLoggingAdapter(logger);
     }
 
     @Subscribe(order = PostOrder.LATE)
@@ -77,7 +78,7 @@ public class VelocityConnectNotify implements ConnectNotifyPlatform {
 
     @Override
     public java.util.logging.Logger getLogger() {
-        return logger;
+        return julLogger;
     }
 
     @Override
@@ -99,23 +100,28 @@ public class VelocityConnectNotify implements ConnectNotifyPlatform {
     }
 
     /**
-     * Simple handler to bridge java.util.logging to SLF4J.
+     * A java.util.logging.Logger adapter that forwards all log calls to SLF4J.
      */
-    private static class Slf4jBridgeHandler extends java.util.logging.Handler {
+    private static class Slf4jLoggingAdapter extends java.util.logging.Logger {
         private final Logger slf4jLogger;
 
-        public Slf4jBridgeHandler(Logger slf4jLogger) {
+        public Slf4jLoggingAdapter(Logger slf4jLogger) {
+            super("ConnectNotify", null);
             this.slf4jLogger = slf4jLogger;
+            setLevel(Level.ALL);
         }
 
         @Override
-        public void publish(java.util.logging.LogRecord record) {
+        public void log(LogRecord record) {
             String message = record.getMessage();
-            if (record.getLevel().intValue() >= java.util.logging.Level.SEVERE.intValue()) {
+            if (message == null) return;
+            
+            int level = record.getLevel().intValue();
+            if (level >= Level.SEVERE.intValue()) {
                 slf4jLogger.error(message);
-            } else if (record.getLevel().intValue() >= java.util.logging.Level.WARNING.intValue()) {
+            } else if (level >= Level.WARNING.intValue()) {
                 slf4jLogger.warn(message);
-            } else if (record.getLevel().intValue() >= java.util.logging.Level.INFO.intValue()) {
+            } else if (level >= Level.INFO.intValue()) {
                 slf4jLogger.info(message);
             } else {
                 slf4jLogger.debug(message);
@@ -123,10 +129,38 @@ public class VelocityConnectNotify implements ConnectNotifyPlatform {
         }
 
         @Override
-        public void flush() {}
+        public void info(String msg) {
+            slf4jLogger.info(msg);
+        }
 
         @Override
-        public void close() {}
+        public void warning(String msg) {
+            slf4jLogger.warn(msg);
+        }
+
+        @Override
+        public void severe(String msg) {
+            slf4jLogger.error(msg);
+        }
+
+        @Override
+        public void fine(String msg) {
+            slf4jLogger.debug(msg);
+        }
+
+        @Override
+        public void finer(String msg) {
+            slf4jLogger.trace(msg);
+        }
+
+        @Override
+        public void finest(String msg) {
+            slf4jLogger.trace(msg);
+        }
+
+        @Override
+        public boolean isLoggable(Level level) {
+            return true;
+        }
     }
 }
-
