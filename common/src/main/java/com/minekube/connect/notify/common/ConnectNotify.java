@@ -14,7 +14,6 @@ public class ConnectNotify {
     private final Logger logger;
 
     private String cachedEndpoint;
-    private String cachedServerName;
 
     public ConnectNotify(ConnectNotifyPlatform platform) {
         this.platform = platform;
@@ -37,7 +36,6 @@ public class ConnectNotify {
 
         // Cache Connect endpoint
         cachedEndpoint = connectConfig.readEndpoint();
-        cachedServerName = connectConfig.readServerName();
 
         logger.info("Connect Notify enabled on " + platform.getPlatformName());
         logger.info("Endpoint: " + cachedEndpoint);
@@ -66,17 +64,12 @@ public class ConnectNotify {
 
     private void sendOnlineNotification() {
         platform.runAsync(() -> {
-            String title = config.getOnlineTitle();
-            String description = buildOnlineDescription();
-            String color = config.getOnlineColor();
-
             for (String webhookUrl : config.getWebhookUrls()) {
-                webhook.sendEmbed(
+                webhook.sendOnlineEmbed(
                         webhookUrl,
-                        title,
-                        description,
-                        color,
-                        null,
+                        cachedEndpoint,
+                        platform.getOnlinePlayerCount(),
+                        platform.getMaxPlayerCount(),
                         config.getBotUsername(),
                         config.getBotAvatarUrl()
                 );
@@ -88,17 +81,10 @@ public class ConnectNotify {
 
     private void sendOfflineNotification() {
         // Run synchronously during shutdown
-        String title = config.getOfflineTitle();
-        String description = replacePlaceholders(config.getOfflineDescription());
-        String color = config.getOfflineColor();
-
         for (String webhookUrl : config.getWebhookUrls()) {
-            webhook.sendEmbed(
+            webhook.sendOfflineEmbed(
                     webhookUrl,
-                    title,
-                    description,
-                    color,
-                    null,
+                    cachedEndpoint,
                     config.getBotUsername(),
                     config.getBotAvatarUrl()
             );
@@ -107,30 +93,7 @@ public class ConnectNotify {
         logger.info("Sent offline notification to " + config.getWebhookUrls().size() + " webhook(s)");
     }
 
-    private String buildOnlineDescription() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(replacePlaceholders(config.getOnlineDescription()));
-
-        if (config.isShowEndpoint() && cachedEndpoint != null && !cachedEndpoint.equals("unknown")) {
-            sb.append("\n\n");
-            sb.append(replacePlaceholders(config.getEndpointText()));
-        }
-
-        return sb.toString();
-    }
-
-    private String replacePlaceholders(String text) {
-        if (text == null) return "";
-
-        return text
-                .replace("{endpoint}", cachedEndpoint != null ? cachedEndpoint : "unknown")
-                .replace("{server-name}", cachedServerName != null ? cachedServerName : "Minecraft Server")
-                .replace("{players}", String.valueOf(platform.getOnlinePlayerCount()))
-                .replace("{max-players}", String.valueOf(platform.getMaxPlayerCount()));
-    }
-
     public NotifyConfig getConfig() {
         return config;
     }
 }
-

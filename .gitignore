@@ -25,3 +25,6 @@ target/
 # Local config
 local.properties
 
+# Test server
+test-server/
+

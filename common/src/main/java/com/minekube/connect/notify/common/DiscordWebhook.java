@@ -15,6 +15,9 @@ import java.util.logging.Logger;
  */
 public class DiscordWebhook {
 
+    private static final String MINEKUBE_ICON = "https://github.com/minekube.png";
+    private static final String MINEKUBE_URL = "https://connect.minekube.com";
+
     private final Logger logger;
 
     public DiscordWebhook(Logger logger) {
@@ -22,51 +25,63 @@ public class DiscordWebhook {
     }
 
     /**
-     * Sends a rich embed message to a Discord webhook.
-     *
-     * @param webhookUrl  The Discord webhook URL
-     * @param title       The embed title
-     * @param description The embed description
-     * @param colorHex    The embed color in hex format (e.g., "#00ff00")
-     * @param footerText  Optional footer text (can be null)
-     * @param username    The bot username (can be null)
-     * @param avatarUrl   The bot avatar URL (can be null)
+     * Sends a server online notification.
      */
-    public void sendEmbed(String webhookUrl, String title, String description,
-                          String colorHex, String footerText, String username, String avatarUrl) {
+    public void sendOnlineEmbed(String webhookUrl, String endpoint, int players, int maxPlayers,
+                                 String username, String avatarUrl) {
         try {
-            JsonObject payload = new JsonObject();
-
-            // Set bot username and avatar if provided
-            if (username != null && !username.isEmpty()) {
-                payload.addProperty("username", username);
-            }
-            if (avatarUrl != null && !avatarUrl.isEmpty()) {
-                payload.addProperty("avatar_url", avatarUrl);
-            }
-
-            // Create embed
+            JsonObject payload = createBasePayload(username, avatarUrl);
             JsonObject embed = new JsonObject();
-            embed.addProperty("title", title);
-            embed.addProperty("description", description);
-            embed.addProperty("color", parseColor(colorHex));
 
-            // Add footer if provided
-            if (footerText != null && !footerText.isEmpty()) {
-                JsonObject footer = new JsonObject();
-                footer.addProperty("text", footerText);
-                embed.add("footer", footer);
-            }
+            // Author with icon and clickable link
+            JsonObject author = new JsonObject();
+            author.addProperty("name", "Server Online");
+            author.addProperty("icon_url", MINEKUBE_ICON);
+            author.addProperty("url", MINEKUBE_URL);
+            embed.add("author", author);
 
-            // Add timestamp
+            // Description with address
+            embed.addProperty("description", "🎮 Join now and start playing!\n```\n" + endpoint + "\n```");
+
+            // Green color
+            embed.addProperty("color", 0x57F287);
+
+            // Inline fields for width
+            JsonArray fields = new JsonArray();
+
+            JsonObject statusField = new JsonObject();
+            statusField.addProperty("name", "Status");
+            statusField.addProperty("value", "🟢 Online");
+            statusField.addProperty("inline", true);
+            fields.add(statusField);
+
+            JsonObject playersField = new JsonObject();
+            playersField.addProperty("name", "Players");
+            playersField.addProperty("value", players + "/" + maxPlayers);
+            playersField.addProperty("inline", true);
+            fields.add(playersField);
+
+            JsonObject pingField = new JsonObject();
+            pingField.addProperty("name", "Ping");
+            pingField.addProperty("value", "Ready");
+            pingField.addProperty("inline", true);
+            fields.add(pingField);
+
+            embed.add("fields", fields);
+
+            // Footer with link
+            JsonObject footer = new JsonObject();
+            footer.addProperty("text", "Minekube Connect • connect.minekube.com");
+            embed.add("footer", footer);
+
+            // Timestamp
             embed.addProperty("timestamp", java.time.Instant.now().toString());
 
-            // Add embed to array
+            // Add embed to payload
             JsonArray embeds = new JsonArray();
             embeds.add(embed);
             payload.add("embeds", embeds);
 
-            // Send request
             sendRequest(webhookUrl, payload.toString());
 
         } catch (Exception e) {
@@ -75,25 +90,83 @@ public class DiscordWebhook {
     }
 
     /**
-     * Sends a simple text message to a Discord webhook.
+     * Sends a server offline notification.
      */
-    public void sendMessage(String webhookUrl, String content, String username, String avatarUrl) {
+    public void sendOfflineEmbed(String webhookUrl, String endpoint, String username, String avatarUrl) {
         try {
-            JsonObject payload = new JsonObject();
-            payload.addProperty("content", content);
+            JsonObject payload = createBasePayload(username, avatarUrl);
+            JsonObject embed = new JsonObject();
 
-            if (username != null && !username.isEmpty()) {
-                payload.addProperty("username", username);
-            }
-            if (avatarUrl != null && !avatarUrl.isEmpty()) {
-                payload.addProperty("avatar_url", avatarUrl);
-            }
+            // Author with icon and clickable link
+            JsonObject author = new JsonObject();
+            author.addProperty("name", "Server Offline");
+            author.addProperty("icon_url", MINEKUBE_ICON);
+            author.addProperty("url", MINEKUBE_URL);
+            embed.add("author", author);
+
+            // Description with address
+            embed.addProperty("description", "🎮 See you next time!\n```\n" + endpoint + "\n```");
+
+            // Red color
+            embed.addProperty("color", 0xED4245);
+
+            // Inline fields for width
+            JsonArray fields = new JsonArray();
+
+            JsonObject statusField = new JsonObject();
+            statusField.addProperty("name", "Status");
+            statusField.addProperty("value", "🔴 Offline");
+            statusField.addProperty("inline", true);
+            fields.add(statusField);
+
+            JsonObject playersField = new JsonObject();
+            playersField.addProperty("name", "Players");
+            playersField.addProperty("value", "—");
+            playersField.addProperty("inline", true);
+            fields.add(playersField);
+
+            JsonObject pingField = new JsonObject();
+            pingField.addProperty("name", "Ping");
+            pingField.addProperty("value", "—");
+            pingField.addProperty("inline", true);
+            fields.add(pingField);
+
+            embed.add("fields", fields);
+
+            // Footer with link
+            JsonObject footer = new JsonObject();
+            footer.addProperty("text", "Minekube Connect • connect.minekube.com");
+            embed.add("footer", footer);
+
+            // Timestamp
+            embed.addProperty("timestamp", java.time.Instant.now().toString());
+
+            // Add embed to payload
+            JsonArray embeds = new JsonArray();
+            embeds.add(embed);
+            payload.add("embeds", embeds);
 
             sendRequest(webhookUrl, payload.toString());
 
         } catch (Exception e) {
             logger.warning("Failed to send Discord webhook: " + e.getMessage());
         }
+    }
+
+    /**
+     * Creates the base webhook payload with username and avatar.
+     */
+    private JsonObject createBasePayload(String username, String avatarUrl) {
+        JsonObject payload = new JsonObject();
+
+        if (username != null && !username.isEmpty()) {
+            payload.addProperty("username", username);
+        }
+        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+            payload.addProperty("avatar_url", avatarUrl);
+        }
+
+        return payload;
     }
 
     private void sendRequest(String webhookUrl, String jsonPayload) throws Exception {
@@ -125,25 +198,4 @@ public class DiscordWebhook {
             connection.disconnect();
         }
     }
-
-    /**
-     * Parses a hex color string to Discord's integer color format.
-     */
-    private int parseColor(String hex) {
-        if (hex == null || hex.isEmpty()) {
-            return 0x00ff00; // Default green
-        }
-
-        // Remove # if present
-        if (hex.startsWith("#")) {
-            hex = hex.substring(1);
-        }
-
-        try {
-            return Integer.parseInt(hex, 16);
-        } catch (NumberFormatException e) {
-            return 0x00ff00; // Default green
-        }
-    }
 }
-

@@ -18,24 +18,16 @@ public class NotifyConfig {
     private final File configFile;
     private final Logger logger;
 
+    private static final String DEFAULT_ICON = "https://github.com/minekube.png";
+
     // Discord settings
     private List<String> webhookUrls = new ArrayList<>();
     private String botUsername = "Connect Notify";
-    private String botAvatarUrl = "https://connect.minekube.com/img/logo.png";
+    private String botAvatarUrl = DEFAULT_ICON;
 
-    // Online message settings
+    // Notification toggles
     private boolean onlineEnabled = true;
-    private String onlineTitle = "Server Online! 🟢";
-    private String onlineDescription = "The server is now up and running.";
-    private String onlineColor = "#00ff00";
-    private boolean showEndpoint = true;
-    private String endpointText = "Connect with: `{endpoint}`";
-
-    // Offline message settings
     private boolean offlineEnabled = true;
-    private String offlineTitle = "Server Offline 🔴";
-    private String offlineDescription = "The server has been shut down.";
-    private String offlineColor = "#ff0000";
 
     public NotifyConfig(File dataFolder, Logger logger) {
         this.configFile = new File(dataFolder, "config.yml");
@@ -60,8 +52,8 @@ public class NotifyConfig {
             if (webhooksObj instanceof List) {
                 webhookUrls = new ArrayList<>();
                 for (Object url : (List<?>) webhooksObj) {
-                    if (url instanceof String && !((String) url).isEmpty() 
-                            && !((String) url).equals("https://discord.com/api/webhooks/...")) {
+                    if (url instanceof String && !((String) url).isEmpty()
+                            && !((String) url).contains("...")) {
                         webhookUrls.add((String) url);
                     }
                 }
@@ -69,24 +61,10 @@ public class NotifyConfig {
             botUsername = getString(discord, "username", botUsername);
             botAvatarUrl = getString(discord, "avatar-url", botAvatarUrl);
 
-            // Load messages section
-            Map<String, Object> messages = getMap(config, "messages");
-
-            // Online message
-            Map<String, Object> online = getMap(messages, "online");
-            onlineEnabled = getBoolean(online, "enabled", onlineEnabled);
-            onlineTitle = getString(online, "title", onlineTitle);
-            onlineDescription = getString(online, "description", onlineDescription);
-            onlineColor = getString(online, "color", onlineColor);
-            showEndpoint = getBoolean(online, "show-endpoint", showEndpoint);
-            endpointText = getString(online, "endpoint-text", endpointText);
-
-            // Offline message
-            Map<String, Object> offline = getMap(messages, "offline");
-            offlineEnabled = getBoolean(offline, "enabled", offlineEnabled);
-            offlineTitle = getString(offline, "title", offlineTitle);
-            offlineDescription = getString(offline, "description", offlineDescription);
-            offlineColor = getString(offline, "color", offlineColor);
+            // Load notifications section
+            Map<String, Object> notifications = getMap(config, "notifications");
+            onlineEnabled = getBoolean(notifications, "online", onlineEnabled);
+            offlineEnabled = getBoolean(notifications, "offline", offlineEnabled);
 
         } catch (Exception e) {
             logger.severe("Failed to load config: " + e.getMessage());
@@ -99,7 +77,6 @@ public class NotifyConfig {
             if (in != null) {
                 Files.copy(in, configFile.toPath());
             } else {
-                // Create default config manually if resource not found
                 createDefaultConfig();
             }
         } catch (IOException e) {
@@ -109,38 +86,23 @@ public class NotifyConfig {
 
     private void createDefaultConfig() throws IOException {
         String defaultConfig = """
-                # Connect Notify Configuration
-                # Discord notifications for Minekube Connect server status
+                # Connect Notify - Discord notifications for your Minecraft server
+                # https://github.com/minekube/connect-notify
                 
-                # Discord webhook notifications
                 discord:
-                  # List of webhook URLs to send notifications to
-                  # Create one in Discord: Server Settings > Integrations > Webhooks > New Webhook
+                  # Add your Discord webhook URL(s) here
+                  # Create one: Right-click channel > Edit Channel > Integrations > Webhooks
                   webhooks:
-                    - 'https://discord.com/api/webhooks/...'
-                    # - 'https://discord.com/api/webhooks/...'  # Add more webhooks here
+                    - ''
                 
-                  # Bot appearance (optional)
+                  # Bot appearance
                   username: 'Connect Notify'
-                  avatar-url: 'https://connect.minekube.com/img/logo.png'
+                  avatar-url: 'https://github.com/minekube.png'
                 
-                # Message settings
-                messages:
-                  # Online message - sent when server starts
-                  online:
-                    enabled: true
-                    title: 'Server Online! 🟢'
-                    description: 'The server is now up and running.'
-                    color: '#00ff00'
-                    show-endpoint: true
-                    endpoint-text: 'Connect with: `{endpoint}`'
-                
-                  # Offline message - sent when server stops
-                  offline:
-                    enabled: true
-                    title: 'Server Offline 🔴'
-                    description: 'The server has been shut down.'
-                    color: '#ff0000'
+                # Enable/disable notifications
+                notifications:
+                  online: true
+                  offline: true
                 """;
         Files.writeString(configFile.toPath(), defaultConfig);
     }
@@ -169,18 +131,9 @@ public class NotifyConfig {
     public String getBotUsername() { return botUsername; }
     public String getBotAvatarUrl() { return botAvatarUrl; }
     public boolean isOnlineEnabled() { return onlineEnabled; }
-    public String getOnlineTitle() { return onlineTitle; }
-    public String getOnlineDescription() { return onlineDescription; }
-    public String getOnlineColor() { return onlineColor; }
-    public boolean isShowEndpoint() { return showEndpoint; }
-    public String getEndpointText() { return endpointText; }
     public boolean isOfflineEnabled() { return offlineEnabled; }
-    public String getOfflineTitle() { return offlineTitle; }
-    public String getOfflineDescription() { return offlineDescription; }
-    public String getOfflineColor() { return offlineColor; }
 
     public boolean hasWebhooks() {
         return !webhookUrls.isEmpty();
     }
 }
-

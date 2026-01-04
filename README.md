@@ -6,16 +6,23 @@ Let your friends know when your local Minecraft server is up and ready to join! 
 
 ## Features
 
-- 🟢 **Online notifications** – Sends a message when your server starts
+- 🟢 **Online notifications** – Sends a beautiful embed when your server starts
 - 🔴 **Offline notifications** – Sends a message when your server stops
 - 🔗 **Automatic endpoint** – Reads your endpoint from [Minekube Connect](https://connect.minekube.com) config
-- 🎨 **Rich embeds** – Beautiful Discord embed messages with customizable colors
+- 🎨 **Rich embeds** – Modern Discord embeds with status, players, and more
 - 📢 **Multiple webhooks** – Notify multiple Discord channels or servers at once
-- ⚡ **Zero config required** – Just paste your Discord webhook URL(s) and go!
+- ⚡ **Simple config** – Just paste your Discord webhook URL and go!
+
+## Supported Platforms
+
+- ✅ Paper / Spigot / Bukkit (1.13+)
+- ✅ Velocity
+- ✅ BungeeCord / Waterfall
+
+All platforms supported with a **single JAR file**.
 
 ## Requirements
 
-- Minecraft server running Spigot, Paper, or compatible forks (1.8+)
 - [Minekube Connect plugin](https://connect.minekube.com/guide/connectors/plugin) installed and configured
 
 ## Installation
@@ -31,63 +38,30 @@ Let your friends know when your local Minecraft server is up and ready to join! 
 ```yaml
 # plugins/ConnectNotify/config.yml
 
-# Discord webhook notifications
 discord:
-  # List of webhook URLs to send notifications to
+  # Add your Discord webhook URL(s) here
   # Create one: Right-click channel > Edit Channel > Integrations > Webhooks
   webhooks:
     - 'https://discord.com/api/webhooks/...'
-    # - 'https://discord.com/api/webhooks/...'  # Add more webhooks here
+    # - 'https://discord.com/api/webhooks/...'  # Add more webhooks
 
-  # Bot appearance (optional)
+  # Bot appearance
   username: 'Connect Notify'
-  avatar-url: 'https://connect.minekube.com/img/logo.png'
+  avatar-url: 'https://github.com/minekube.png'
 
-# Message settings
-messages:
-  # Online message - sent when server starts
-  online:
-    enabled: true
-    title: 'Server Online! 🟢'
-    description: 'The server is now up and running.'
-    color: '#00ff00'
-    show-endpoint: true
-    endpoint-text: 'Connect with: `{endpoint}`'
-
-  # Offline message - sent when server stops
-  offline:
-    enabled: true
-    title: 'Server Offline 🔴'
-    description: 'The server has been shut down.'
-    color: '#ff0000'
+# Enable/disable notifications
+notifications:
+  online: true
+  offline: true
 ```
 
-### Placeholders
-
-| Placeholder     | Description                                                           |
-| --------------- | --------------------------------------------------------------------- |
-| `{endpoint}`    | Your Minekube Connect endpoint (e.g., `yourserver.play.minekube.net`) |
-| `{server-name}` | Your server name from Connect config                                  |
-| `{players}`     | Current online player count                                           |
-| `{max-players}` | Maximum player slots                                                  |
-
 ## Creating a Discord Webhook
-
-**Option A: Via Channel Settings (easiest)**
 
 1. Right-click the channel where you want notifications
 2. Click **Edit Channel** → **Integrations** → **Webhooks**
 3. Click **New Webhook**
 4. Copy the **Webhook URL**
-
-**Option B: Via Server Settings**
-
-1. Go to **Server Settings** → **Integrations** → **Webhooks**
-2. Click **New Webhook**
-3. Select the channel for notifications
-4. Copy the **Webhook URL**
-
-Then add the URL to `discord.webhooks` in `config.yml`.
+5. Paste it into `config.yml`
 
 > **Tip:** You can add multiple webhooks to notify different channels or servers!
 
@@ -106,33 +80,55 @@ Then add the URL to `discord.webhooks` in `config.yml`.
                               ┌──────────────────┐
                               │ Discord Webhooks │
                               │ #server-status   │
-                              │ #announcements   │
-                              │ ...              │
                               └──────────────────┘
 ```
 
 ## Example Discord Messages
 
+The plugin sends rich embeds with your server info:
+
 **Online:**
 
-> ### Server Online! 🟢
->
-> The server is now up and running.
->
-> Connect with: `myserver.play.minekube.net`
+```
+┌────────────────────────────────────────┐
+│ 🟢 Server Online                       │
+├────────────────────────────────────────┤
+│ 🎮 Join now and start playing!         │
+│ ┌────────────────────────────────────┐ │
+│ │ myserver.play.minekube.net         │ │
+│ └────────────────────────────────────┘ │
+│                                        │
+│ Status      Players      Ping          │
+│ 🟢 Online   0/20         Ready         │
+├────────────────────────────────────────┤
+│ Minekube Connect          Today 12:00  │
+└────────────────────────────────────────┘
+```
 
 **Offline:**
 
-> ### Server Offline 🔴
->
-> The server has been shut down.
+```
+┌────────────────────────────────────────┐
+│ 🔴 Server Offline                      │
+├────────────────────────────────────────┤
+│ 🎮 See you next time!                  │
+│ ┌────────────────────────────────────┐ │
+│ │ myserver.play.minekube.net         │ │
+│ └────────────────────────────────────┘ │
+│                                        │
+│ Status      Players      Ping          │
+│ 🔴 Offline  —            —             │
+├────────────────────────────────────────┤
+│ Minekube Connect          Today 12:05  │
+└────────────────────────────────────────┘
+```
 
 ## Troubleshooting
 
 ### No messages in Discord?
 
-1. Check that your webhook URLs are correct under `discord.webhooks` in `config.yml`
-2. Make sure the webhook(s) haven't been deleted in Discord
+1. Check that your webhook URL is correct in `config.yml`
+2. Make sure the webhook hasn't been deleted in Discord
 3. Check server console for error messages
 4. Verify Minekube Connect is loaded and has a valid endpoint
 
