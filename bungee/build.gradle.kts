@@ -1,0 +1,5 @@
+dependencies {
+    compileOnly(project(":common"))
+    compileOnly("net.md-5:bungeecord-api:1.20-R0.2")
+}
+

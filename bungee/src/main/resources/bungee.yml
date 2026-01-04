@@ -1,0 +1,9 @@
+name: ConnectNotify
+version: ${version}
+main: com.minekube.connect.notify.bungee.BungeeConnectNotify
+description: ${description}
+author: Minekube
+softDepends:
+  - connect
+  - Connect
+

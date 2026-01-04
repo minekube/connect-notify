@@ -1,0 +1,33 @@
+# Connect Notify Configuration
+# Discord notifications for Minekube Connect server status
+
+# Discord webhook notifications
+discord:
+  # List of webhook URLs to send notifications to
+  # Create one: Right-click channel > Edit Channel > Integrations > Webhooks > New Webhook
+  webhooks:
+    - 'https://discord.com/api/webhooks/...'
+    # - 'https://discord.com/api/webhooks/...'  # Add more webhooks here
+
+  # Bot appearance (optional)
+  username: 'Connect Notify'
+  avatar-url: 'https://connect.minekube.com/img/logo.png'
+
+# Message settings
+messages:
+  # Online message - sent when server starts
+  online:
+    enabled: true
+    title: 'Server Online! 🟢'
+    description: 'The server is now up and running.'
+    color: '#00ff00'
+    show-endpoint: true
+    endpoint-text: 'Connect with: `{endpoint}`'
+
+  # Offline message - sent when server stops
+  offline:
+    enabled: true
+    title: 'Server Offline 🔴'
+    description: 'The server has been shut down.'
+    color: '#ff0000'
+
