@@ -1,5 +1,8 @@
 # Connect Notify
 
+[![Download](https://img.shields.io/github/v/release/minekube/connect-notify?label=Download&style=for-the-badge)](https://github.com/minekube/connect-notify/releases/latest)
+[![GitHub Stars](https://img.shields.io/github/stars/minekube/connect-notify?style=for-the-badge)](https://github.com/minekube/connect-notify)
+
 **Discord notifications for your Minekube Connect server status.**
 
 <p align="center">
